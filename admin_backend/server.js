@@ -4,7 +4,14 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const app = express();
-app.use(cors());
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://adminfrontend-lilac.vercel.app",
+];
+
+app.use(cors({
+    origin: allowedOrigins
+}));
 app.use(express.json({ limit: "5mb" }));
 
 const connectdb = require("./config/db");
