@@ -41,7 +41,7 @@ export default function CartItem({ item, onUpdate, onRemove, onToggleSave }) {
             </p>
           </div>
           <p className="font-medium text-ink whitespace-nowrap">
-            ${(product.price * item.quantity).toFixed(2)}
+            ₹{(product.price * item.quantity).toLocaleString("en-IN")}
           </p>
         </div>
 

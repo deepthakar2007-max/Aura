@@ -125,7 +125,11 @@ export default function ProductPageDetail() {
 
         <div className="grid md:grid-cols-2 gap-14">
           <FadeUp>
-            <ProductGallery img={product.img} badge={badge} />
+            <ProductGallery
+              images={product.images}
+              img={product.img}
+              badge={badge}
+            />
           </FadeUp>
 
           <FadeUp delay={0.15}>
@@ -150,7 +154,7 @@ export default function ProductPageDetail() {
             )}
 
             <p className="font-display text-3xl text-ink mt-6">
-              ${product.price}
+              ₹{product.price.toLocaleString("en-IN")}
             </p>
 
             <p className="text-sm text-ink/60 mt-4 leading-relaxed max-w-md">

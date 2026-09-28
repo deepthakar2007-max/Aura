@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import CouponBox from "../coupon/CouponBox";
 
-const FREE_SHIP_THRESHOLD = 1000;
+const FREE_SHIP_THRESHOLD = 5000;
 const TAX_RATE = 0.08;
 
 export default function CartSummary({
@@ -19,7 +19,7 @@ export default function CartSummary({
 
   const afterDiscount = Math.max(0, totalPrice - discount);
   const freeShip = afterDiscount >= FREE_SHIP_THRESHOLD;
-  const shipping = freeShip ? 0 : 99;
+  const shipping = freeShip ? 0 : 149;
   const taxes = afterDiscount * TAX_RATE;
   const grandTotal = afterDiscount + shipping + taxes;
 
@@ -39,30 +39,30 @@ export default function CartSummary({
       <div className="space-y-3 text-sm">
         <div className="flex justify-between text-ink/70">
           <span>Subtotal</span>
-          <span>${totalPrice.toFixed(2)}</span>
+          <span>₹{totalPrice.toLocaleString("en-IN")}</span>
         </div>
         {discount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Discount</span>
-            <span>−${discount.toFixed(2)}</span>
+            <span>−₹{discount.toLocaleString("en-IN")}</span>
           </div>
         )}
         <div className="flex justify-between text-ink/70">
           <span>Estimated Shipping</span>
           <span className={freeShip ? "text-accent font-medium" : ""}>
-            {freeShip ? "FREE" : `$${shipping.toFixed(2)}`}
+            {freeShip ? "FREE" : `₹${shipping}`}
           </span>
         </div>
         <div className="flex justify-between text-ink/70">
-          <span>Estimated Taxes</span>
-          <span>${taxes.toFixed(2)}</span>
+          <span>Estimated Tax</span>
+          <span>₹{taxes.toFixed(0)}</span>
         </div>
       </div>
 
       <div className="flex justify-between items-baseline pt-4 border-t border-ink/10">
         <span className="font-medium text-ink">Final Total</span>
         <span className="font-display text-3xl text-ink">
-          ${grandTotal.toFixed(2)}
+          ₹{grandTotal.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
         </span>
       </div>
 

@@ -4,7 +4,7 @@ export default function DeliveryOptions({ tier, onChange }) {
       id: "express",
       label: "Express White-Glove Delivery",
       desc: "Hand-delivered by courier, unpacked & inspected",
-      price: 150,
+      price: 499,
     },
     {
       id: "standard",
@@ -49,7 +49,7 @@ export default function DeliveryOptions({ tier, onChange }) {
               </div>
             </div>
             <span className="text-sm font-medium text-ink">
-              {opt.price === 0 ? "Complimentary" : `$${opt.price.toFixed(2)}`}
+              {opt.price === 0 ? "Complimentary" : `₹${opt.price}`}
             </span>
           </label>
         ))}

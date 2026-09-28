@@ -76,7 +76,9 @@ export default function ProductCard({ product }) {
         </p>
       </Link>
       <div className="flex items-center justify-between mt-1">
-        <p className="text-sm text-ink">${product.price}</p>
+        <p className="text-sm text-ink">
+          ₹{product.price.toLocaleString("en-IN")}
+        </p>
         {product.stock === 0 && (
           <span className="text-[10px] text-red-500 uppercase">
             Out of stock

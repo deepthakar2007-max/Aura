@@ -1,8 +1,10 @@
 import { useState } from "react";
+import InnerImageZoom from "react-inner-image-zoom";
+import "react-inner-image-zoom/lib/styles.min.css";
 
-export default function ProductGallery({ img, badge }) {
+export default function ProductGallery({ images, img, badge }) {
+  const thumbs = images && images.length ? images : [img, img, img, img];
   const [active, setActive] = useState(0);
-  const thumbs = [img, img, img, img];
 
   return (
     <div>
@@ -12,8 +14,10 @@ export default function ProductGallery({ img, badge }) {
             {badge}
           </span>
         )}
-        <img
+
+        <InnerImageZoom
           src={thumbs[active]}
+          zoomSrc={thumbs[active]}
           alt="Product"
           className="w-full h-full object-cover"
         />

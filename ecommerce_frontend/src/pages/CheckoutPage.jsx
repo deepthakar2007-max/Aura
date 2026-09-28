@@ -51,7 +51,7 @@ export default function CheckoutPage() {
         : appliedCoupon.discount;
   }
   const afterDiscount = Math.max(0, totalPrice - discount);
-  const shipping = deliveryTier === "express" ? 150 : 0;
+  const shipping = deliveryTier === "express" ? 499 : 0;
   const taxes = afterDiscount * TAX_RATE;
   const grandTotal = afterDiscount + shipping + taxes;
 
@@ -241,7 +241,10 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                     <p className="text-sm text-ink whitespace-nowrap">
-                      ${(item.product.price * item.quantity).toFixed(2)}
+                      ₹
+                      {(item.product.price * item.quantity).toLocaleString(
+                        "en-IN",
+                      )}
                     </p>
                   </div>
                 ))}
@@ -250,23 +253,21 @@ export default function CheckoutPage() {
               <div className="space-y-2 text-sm text-ink/70 pt-3 border-t border-ink/10">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>${totalPrice.toFixed(2)}</span>
+                  <span>₹{totalPrice.toLocaleString("en-IN")}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount ({appliedCoupon.code})</span>
-                    <span>−${discount.toFixed(2)}</span>
+                    <span>−₹{discount.toLocaleString("en-IN")}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>
-                    {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
-                  </span>
+                  <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Estimated Tax</span>
-                  <span>${taxes.toFixed(2)}</span>
+                  <span>₹{taxes.toFixed(0)}</span>
                 </div>
               </div>
 
@@ -279,7 +280,10 @@ export default function CheckoutPage() {
               >
                 <span className="font-medium text-ink">Total</span>
                 <span className="font-display text-2xl text-ink">
-                  ${grandTotal.toFixed(2)}
+                  ₹
+                  {grandTotal.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                  })}
                 </span>
               </motion.div>
 
@@ -290,7 +294,7 @@ export default function CheckoutPage() {
               >
                 {placing
                   ? "Placing order…"
-                  : `🔒 Place Order & Pay $${grandTotal.toFixed(2)}`}
+                  : `🔒 Place Order & Pay ₹${grandTotal.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
               </AnimatedButton>
 
               <p className="text-[10px] text-center text-ink/40">

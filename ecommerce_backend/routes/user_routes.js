@@ -1,16 +1,14 @@
 const express = require("express");
 const {
-  register,
-  login,
-  getUser,
-  updateUser,
-  deleteUser,
+  register, login, getUser, updateUser, deleteUser, sendOtp, verifyOtp,
 } = require("./../controller/user_controll.js");
 
 const auth = require("./../middleware/auth.js");
 
 const router = express.Router();
 
+router.post("/send-otp", sendOtp);
+router.post("/verify-otp", verifyOtp);
 router.post("/register", register);
 router.post("/login", login);
 router.get("/user", auth, getUser);

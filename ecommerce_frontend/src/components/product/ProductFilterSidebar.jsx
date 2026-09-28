@@ -61,15 +61,17 @@ export default function ProductFilterSidebar({
         <input
           type="range"
           min="0"
-          max="10000"
-          step="100"
+          max="50000"
+          step="500"
           value={priceRange}
           onChange={(e) => onPriceChange(Number(e.target.value))}
           className="w-full accent-ink"
         />
         <div className="flex justify-between text-xs text-ink/50 mt-2">
-          <span>$0</span>
-          <span className="font-medium text-ink">${priceRange}+</span>
+          <span>₹0</span>
+          <span className="font-medium text-ink">
+            ₹{priceRange.toLocaleString("en-IN")}+
+          </span>
         </div>
       </div>
     </aside>

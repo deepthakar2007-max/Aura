@@ -65,7 +65,7 @@ export default function LimitedPromo() {
             to="/shop"
             className="inline-block mt-8 bg-ink text-white text-xs tracking-widest uppercase px-6 py-3.5 hover:bg-ink/80 transition-colors"
           >
-            Secure Allocation ($24,500)
+            Secure Allocation (₹1,85,000)
           </Link>
         </div>
 
@@ -77,7 +77,7 @@ export default function LimitedPromo() {
           />
           <div className="flex justify-between items-center px-2 py-3">
             <p className="text-sm font-medium text-ink">AURA Chronos — Gold</p>
-            <p className="text-sm text-accent">$24,500</p>
+            <p className="text-sm text-accent">₹1,85,000</p>
           </div>
         </div>
       </div>
