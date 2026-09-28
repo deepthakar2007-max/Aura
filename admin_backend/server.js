@@ -4,25 +4,19 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const app = express();
+
+
 const allowedOrigins = [
     "http://localhost:5173",
     "https://adminfrontend-lilac.vercel.app"
 ];
 
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
-        }
-    },
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
 }));
-
-app.options("*", cors());
 app.use(express.json({ limit: "5mb" }));
 
 const connectdb = require("./config/db");
