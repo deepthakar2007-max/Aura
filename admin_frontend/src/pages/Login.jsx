@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../hooks/useAdminAuth";
 
 export default function Login() {
@@ -24,7 +24,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-paper">
+    <div className="min-h-screen flex items-center justify-center bg-paper px-4">
       <form
         onSubmit={handleSubmit}
         className="bg-white border border-ink/10 p-8 w-full max-w-sm space-y-5"
@@ -55,6 +55,11 @@ export default function Login() {
             className="mt-1 w-full border border-ink/15 px-3 py-2 rounded"
           />
         </div>
+        <div className="flex justify-end">
+          <Link to="/forgot-password" className="text-xs text-accent underline">
+            Forgot password?
+          </Link>
+        </div>
         <button
           type="submit"
           disabled={busy}
@@ -62,6 +67,12 @@ export default function Login() {
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>
+        <p className="text-sm text-ink/60 text-center">
+          Need an admin account?{" "}
+          <Link to="/register" className="text-accent underline">
+            Create one
+          </Link>
+        </p>
       </form>
     </div>
   );

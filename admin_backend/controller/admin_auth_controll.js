@@ -1,14 +1,41 @@
 const userModel = require("../model/user_model");
+const adminUserModel = require("../model/adminUser_model");
+const otpModel = require("../model/otp_model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const sendOtpEmail = require("../utils/mailer");
 const logActivity = require("../utils/logActivity");
+
+const adminRegister = async (req, res) => {
+    try {
+        const { username, email, password, adminRole, secretCode } = req.body;
+
+        if (!username || !email || !password || !adminRole || !secretCode) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
+        }
+        if (secretCode !== process.env.ADMIN_SECRET_CODE) {
+            return res.status(403).json({ success: false, message: "Invalid secret code" });
+        }
+
+        const upperEmail = email.trim().toUpperCase();
+        const exists = await userModel.findOne({ email: upperEmail });
+        if (exists) return res.status(409).json({ success: false, message: "Email already registered" });
+
+        const hashed = await bcrypt.hash(password, 10);
+        const user = await userModel.create({ username, email: upperEmail, password: hashed, role: "admin" });
+        await adminUserModel.create({ user: user._id, adminRole });
+
+        res.status(201).json({ success: true, message: "Admin account created. You can now login." });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 
 const adminLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ success: false, message: "Email and password required" });
-        }
+        if (!email || !password) return res.status(400).json({ success: false, message: "Email and password required" });
+
         const user = await userModel.findOne({ email: email.trim().toUpperCase() });
         if (!user) return res.status(404).json({ success: false, message: "Admin not found" });
         if (user.role !== "admin") return res.status(403).json({ success: false, message: "Not an admin account" });
@@ -19,6 +46,53 @@ const adminLogin = async (req, res) => {
         const token = jwt.sign({ userid: user._id, role: user.role }, process.env.KEY);
         await logActivity(user._id, "Admin Login", "Auth");
         res.json({ success: true, message: "Login successful", token });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const sendResetOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ success: false, message: "Email is required" });
+
+        const upperEmail = email.trim().toUpperCase();
+        const user = await userModel.findOne({ email: upperEmail, role: "admin" });
+        if (!user) return res.status(404).json({ success: false, message: "No admin account with this email" });
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        await otpModel.deleteMany({ email: upperEmail });
+        await otpModel.create({ email: upperEmail, otp, expiresAt });
+        await sendOtpEmail(email, otp, "reset");
+
+        res.json({ success: true, message: "OTP sent to your email" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ success: false, message: "Email, OTP and new password required" });
+        }
+        const upperEmail = email.trim().toUpperCase();
+        const record = await otpModel.findOne({ email: upperEmail, otp });
+        if (!record) return res.status(400).json({ success: false, message: "Invalid OTP" });
+        if (record.expiresAt < new Date()) {
+            await otpModel.deleteOne({ _id: record._id });
+            return res.status(400).json({ success: false, message: "OTP expired" });
+        }
+
+        const user = await userModel.findOne({ email: upperEmail });
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+        await otpModel.deleteOne({ _id: record._id });
+
+        res.json({ success: true, message: "Password reset successfully" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -64,4 +138,7 @@ const changePassword = async (req, res) => {
     }
 };
 
-module.exports = { adminLogin, getAdminProfile, updateAdminProfile, changePassword };
+module.exports = {
+    adminRegister, adminLogin, sendResetOtp, resetPassword,
+    getAdminProfile, updateAdminProfile, changePassword,
+};
