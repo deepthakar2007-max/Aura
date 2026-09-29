@@ -13,7 +13,9 @@ const adminRegister = async (req, res) => {
         if (!username || !email || !password || !adminRole || !secretCode) {
             return res.status(400).json({ success: false, message: "All fields are required" });
         }
-        if (secretCode !== process.env.ADMIN_SECRET_CODE) {
+        console.log(process.env.ADMIN_SECRET_CODE);
+        
+        if (secretCode != process.env.ADMIN_SECRET_CODE) {
             return res.status(403).json({ success: false, message: "Invalid secret code" });
         }
 

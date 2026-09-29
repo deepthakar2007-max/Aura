@@ -1,6 +1,6 @@
 import { API_BASE_URL } from '../config'
 
-const getToken = () => localStorage.getItem('token')
+const getToken = () => localStorage.getItem('admin_token')
 
 async function request(endpoint, { method = 'GET', body, auth = false } = {}) {
     const headers = { 'Content-Type': 'application/json' }
