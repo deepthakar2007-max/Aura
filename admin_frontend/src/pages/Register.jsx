@@ -13,6 +13,7 @@ export default function Register() {
     adminRole: "Staff",
     secretCode: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,85 +35,142 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-paper px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white border border-ink/10 p-8 w-full max-w-sm space-y-4"
-      >
-        <h1 className="text-2xl font-semibold text-ink">
-          Create Admin Account
-        </h1>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-paper px-4 py-10">
+      <div className="w-full max-w-md bg-white rounded-2xl border border-ink/10 p-6 sm:p-10">
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="w-14 h-14 rounded-xl bg-ink flex items-center justify-center mb-4">
+            <span className="text-accent text-2xl">◆</span>
+          </div>
+          <h1 className="text-xl font-semibold text-ink">
+            Create Admin Account
+          </h1>
+          <p className="text-sm text-ink/50 mt-1 max-w-xs">
+            Join the AURA management console with a secure invite code
+          </p>
+        </div>
+
         {error && (
-          <p className="text-sm bg-red-50 text-danger border border-red-200 rounded px-3 py-2">
+          <p className="text-sm bg-red-50 text-danger border border-red-200 rounded-lg px-3 py-2 mb-5">
             {error}
           </p>
         )}
         {msg && (
-          <p className="text-sm bg-green-50 text-green-700 border border-green-200 rounded px-3 py-2">
+          <p className="text-sm bg-green-50 text-green-700 border border-green-200 rounded-lg px-3 py-2 mb-5">
             {msg}
           </p>
         )}
 
-        <input
-          placeholder="Username"
-          required
-          value={form.username}
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
-          className="w-full border border-ink/15 px-3 py-2 rounded"
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          required
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="w-full border border-ink/15 px-3 py-2 rounded"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          required
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className="w-full border border-ink/15 px-3 py-2 rounded"
-        />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="text-sm font-medium text-ink">Full Name</label>
+            <div className="mt-1.5 flex items-center gap-2 bg-cream/50 border border-ink/10 rounded-lg px-3 py-2.5 focus-within:ring-2 focus-within:ring-accent/40 focus-within:border-accent">
+              <span className="text-ink/40">👤</span>
+              <input
+                required
+                placeholder="Rahul Sharma"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                className="bg-transparent flex-1 outline-none text-sm text-ink placeholder:text-ink/30"
+              />
+            </div>
+          </div>
 
-        <select
-          value={form.adminRole}
-          onChange={(e) => setForm({ ...form, adminRole: e.target.value })}
-          className="w-full border border-ink/15 px-3 py-2 rounded"
-        >
-          {ROLES.map((r) => (
-            <option key={r}>{r}</option>
-          ))}
-        </select>
+          <div>
+            <label className="text-sm font-medium text-ink">
+              Email Address
+            </label>
+            <div className="mt-1.5 flex items-center gap-2 bg-cream/50 border border-ink/10 rounded-lg px-3 py-2.5 focus-within:ring-2 focus-within:ring-accent/40 focus-within:border-accent">
+              <span className="text-ink/40">✉</span>
+              <input
+                type="email"
+                required
+                placeholder="admin@aurastore.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="bg-transparent flex-1 outline-none text-sm text-ink placeholder:text-ink/30"
+              />
+            </div>
+          </div>
 
-        <input
-          placeholder="Admin Secret Code"
-          required
-          value={form.secretCode}
-          onChange={(e) => setForm({ ...form, secretCode: e.target.value })}
-          className="w-full border border-ink/15 px-3 py-2 rounded"
-        />
-        <p className="text-xs text-ink/40">
-          Secret code is set by the business owner in the backend .env file.
-        </p>
+          <div>
+            <label className="text-sm font-medium text-ink">Password</label>
+            <div className="mt-1.5 flex items-center gap-2 bg-cream/50 border border-ink/10 rounded-lg px-3 py-2.5 focus-within:ring-2 focus-within:ring-accent/40 focus-within:border-accent">
+              <span className="text-ink/40">🔒</span>
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                placeholder="••••••••••••"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="bg-transparent flex-1 outline-none text-sm text-ink placeholder:text-ink/30"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="text-ink/40 text-sm"
+              >
+                {showPassword ? "🙈" : "👁"}
+              </button>
+            </div>
+          </div>
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full bg-ink text-white py-2.5 rounded disabled:opacity-60"
-        >
-          {busy ? "Creating…" : "Create Account"}
-        </button>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium text-ink">Role</label>
+              <select
+                value={form.adminRole}
+                onChange={(e) =>
+                  setForm({ ...form, adminRole: e.target.value })
+                }
+                className="mt-1.5 w-full bg-cream/50 border border-ink/10 rounded-lg px-3 py-2.5 text-sm text-ink outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              >
+                {ROLES.map((r) => (
+                  <option key={r}>{r}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-ink">
+                Invite Code
+              </label>
+              <input
+                required
+                placeholder="Secret code"
+                value={form.secretCode}
+                onChange={(e) =>
+                  setForm({ ...form, secretCode: e.target.value })
+                }
+                className="mt-1.5 w-full bg-cream/50 border border-ink/10 rounded-lg px-3 py-2.5 text-sm text-ink outline-none placeholder:text-ink/30 focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              />
+            </div>
+          </div>
 
-        <p className="text-sm text-ink/60 text-center">
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full bg-ink text-white py-3 rounded-lg text-sm font-medium hover:bg-ink/85 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {busy ? (
+              "Creating account…"
+            ) : (
+              <>
+                Create Account <span>→</span>
+              </>
+            )}
+          </button>
+        </form>
+
+        <p className="text-sm text-ink/60 text-center mt-8">
           Already have an account?{" "}
-          <Link to="/login" className="text-accent underline">
+          <Link to="/login" className="text-accent font-medium hover:underline">
             Sign in
           </Link>
         </p>
-      </form>
+      </div>
+
+      <p className="text-xs text-ink/30 mt-8 text-center px-4">
+        © 2026 AURA Commerce Inc. Secure Enterprise Environment.
+      </p>
     </div>
   );
 }

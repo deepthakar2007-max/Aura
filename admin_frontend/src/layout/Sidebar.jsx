@@ -31,24 +31,33 @@ export default function Sidebar({ open, onClose }) {
         />
       )}
       <aside
-        className={`fixed md:static top-0 left-0 h-full md:h-auto w-64 md:w-56 bg-ink text-white flex-shrink-0 min-h-screen p-4 overflow-y-auto z-50 transition-transform duration-200 ${
+        className={`fixed md:sticky top-0 left-0 h-screen w-64 md:w-56 bg-sidebar text-white flex-shrink-0 overflow-y-auto z-50 transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        <div className="flex items-center justify-between mb-8 px-2">
-          <p className="text-lg font-semibold">AURA Admin</p>
-          <button onClick={onClose} className="md:hidden text-white/60">
+        <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-md bg-accent/20 text-accent flex items-center justify-center text-sm">
+              A
+            </span>
+            <p className="text-sm font-semibold tracking-wide">AURA</p>
+          </div>
+          <button onClick={onClose} className="md:hidden text-white/50">
             ✕
           </button>
         </div>
-        <nav className="space-y-1">
+        <nav className="p-3 space-y-0.5">
           {links.map((l) => (
             <NavLink
               key={l.to}
               to={l.to}
               onClick={onClose}
               className={({ isActive }) =>
-                `block px-3 py-2 rounded text-sm ${isActive ? "bg-white/10" : "text-white/60 hover:bg-white/5"}`
+                `block px-3 py-2 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? "bg-accent/15 text-accent"
+                    : "text-white/55 hover:bg-white/5 hover:text-white/80"
+                }`
               }
             >
               {l.label}

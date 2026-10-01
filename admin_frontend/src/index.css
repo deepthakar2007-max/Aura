@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-    --color-ink: #14110F;
-    --color-paper: #F7F5F0;
+    --color-ink: #262421;
+    --color-paper: #FAF8F4;
     --color-brand: #2F5D50;
-    --color-accent: #B8985A;
-    --color-danger: #DC2626;
+    --color-accent: #A6875C;
+    --color-danger: #C0392B;
+    --color-sidebar: #1E1C1A;
     --font-sans: 'Inter', sans-serif;
 }

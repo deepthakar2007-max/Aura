@@ -8,6 +8,8 @@ const settingsSchema = new mongoose.Schema(
         storeAddress: { type: String, default: "" },
         currency: { type: String, default: "INR" },
         taxRate: { type: Number, default: 8 },
+        autoTaxCalculation: { type: Boolean, default: true },
+        lowStockAlerts: { type: Boolean, default: true },
     },
     { timestamps: true }
 );
