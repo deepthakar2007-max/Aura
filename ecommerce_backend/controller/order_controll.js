@@ -1,4 +1,5 @@
 const orderModel = require("../model/order_model");
+const notifyAdmin = require("../utils/notifyAdmin");
 
 const placeOrder = async (req, res) => {
   try {
@@ -13,6 +14,9 @@ const placeOrder = async (req, res) => {
       shippingPrice: shippingPrice ?? 0,
       totalPrice,
     });
+
+    await notifyAdmin("order", `New order #${order._id.toString().slice(-6).toUpperCase()} placed for ₹${totalPrice}. Requires fulfillment.`);
+
     res.status(201).json({ success: true, data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -55,6 +59,7 @@ const updateOrder = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 const cancelOrder = async (req, res) => {
   try {
     const order = await orderModel.findByIdAndUpdate(
@@ -68,4 +73,5 @@ const cancelOrder = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 module.exports = { placeOrder, updateOrder, cancelOrder, getOrder, getOrders };

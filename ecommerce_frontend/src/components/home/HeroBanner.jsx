@@ -1,6 +1,11 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
+import { getBanners } from "../../api/bannerApi";
+
+const FALLBACK_IMG =
+  "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1600&q=80";
 
 export default function HeroBanner() {
   const ref = useRef(null);
@@ -10,6 +15,15 @@ export default function HeroBanner() {
   });
   const y = useTransform(scrollYProgress, [0, 1], [0, 120]);
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.3]);
+  const [banner, setBanner] = useState(null);
+
+  useEffect(() => {
+    getBanners("hero")
+      .then((res) => setBanner(res.data[0] || null))
+      .catch(() => {});
+  }, []);
+
+  const bgImage = banner?.image || FALLBACK_IMG;
 
   return (
     <section
@@ -26,8 +40,7 @@ export default function HeroBanner() {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage:
-              "linear-gradient(to top, rgba(20,17,15,0.8), rgba(20,17,15,0.15)), url('https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1600&q=80')",
+            backgroundImage: `linear-gradient(to top, rgba(20,17,15,0.8), rgba(20,17,15,0.15)), url('${bgImage}')`,
           }}
         />
       </motion.div>
@@ -49,7 +62,7 @@ export default function HeroBanner() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="font-display text-3xl sm:text-5xl text-white leading-tight"
           >
-            Timeless Elegance, Modern Luxury
+            {banner?.title || "Timeless Elegance, Modern Luxury"}
           </motion.h1>
 
           <motion.p
@@ -71,7 +84,7 @@ export default function HeroBanner() {
           >
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Link
-                to="/shop"
+                to={banner?.link || "/shop"}
                 className="block bg-white text-ink text-xs tracking-widest uppercase px-6 py-3.5 hover:bg-cream transition-colors"
               >
                 Explore Collection

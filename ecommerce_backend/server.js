@@ -21,7 +21,7 @@ const couponrouter = require("./routes/coupon_routes.js");
 const wishlistrouter = require('./routes/wishlist_routes.js')
 const addressrouter = require('./routes/address_routes.js')
 const orderrouter = require("./routes/order_routes.js");
-
+const bannerrouter = require("./routes/banner_routes.js");
 
 
 
@@ -35,6 +35,8 @@ app.use("/auth/coupon", couponrouter);
 app.use("/auth/address", addressrouter);
 app.use("/auth/wishlist", wishlistrouter);
 app.use("/auth/order", orderrouter);
+app.use("/auth/banner", bannerrouter);
+
 
 app.get("/", (req, res) => {
   res.send("server worked 💪");
@@ -43,3 +45,4 @@ app.get("/", (req, res) => {
 app.listen(process.env.PORT || 5000, () => {
   console.log(`Server running on port ${process.env.PORT}`);
 });
+

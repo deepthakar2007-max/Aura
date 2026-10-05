@@ -8,9 +8,21 @@ import {
   deleteBanner,
 } from "../api/bannerApi";
 
+const PER_PAGE = 5;
+
+const positionBadge = {
+  hero: "bg-amber-100 text-amber-700",
+  promo: "bg-blue-100 text-blue-700",
+  featured: "bg-purple-100 text-purple-700",
+};
+
 export default function BannerList() {
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [positionFilter, setPositionFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [form, setForm] = useState({
@@ -59,121 +71,279 @@ export default function BannerList() {
     load();
   };
 
+  const filtered = banners
+    .filter((b) => b.title.toLowerCase().includes(search.toLowerCase()))
+    .filter((b) => !positionFilter || b.position === positionFilter)
+    .filter((b) => !statusFilter || b.status === statusFilter)
+    .sort((a, b) => a.order - b.order);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  const activeCount = banners.filter((b) => b.status === "active").length;
+  const heroCount = banners.filter((b) => b.position === "hero").length;
+
   return (
     <AdminLayout>
-      <div className="flex justify-between items-center mb-5">
-        <h1 className="text-xl font-semibold text-ink">Banners / CMS</h1>
+      <p className="text-xs text-accent uppercase tracking-wide mb-1">
+        Storefront Presentation / Content Management
+      </p>
+      <div className="flex items-start justify-between flex-wrap gap-3 mb-1">
+        <h1 className="text-2xl font-semibold text-ink">Banners / CMS</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-ink text-white px-4 py-2 rounded text-sm"
+          className="bg-ink text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-ink/85 transition-colors whitespace-nowrap"
         >
           + Add Banner
         </button>
+      </div>
+      <p className="text-sm text-ink/50 mb-6">
+        Manage homepage banners and promotional sections.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white border border-ink/10 rounded-xl p-4">
+          <p className="text-xs uppercase tracking-wide text-ink/40">
+            Total Banners
+          </p>
+          <p className="text-2xl font-semibold text-ink mt-1">
+            {banners.length}
+          </p>
+        </div>
+        <div className="bg-white border border-ink/10 rounded-xl p-4">
+          <p className="text-xs uppercase tracking-wide text-ink/40">
+            Active Banners
+          </p>
+          <p className="text-2xl font-semibold text-green-600 mt-1">
+            {activeCount}
+          </p>
+        </div>
+        <div className="bg-white border border-ink/10 rounded-xl p-4">
+          <p className="text-xs uppercase tracking-wide text-ink/40">
+            Hero Position Count
+          </p>
+          <p className="text-2xl font-semibold text-amber-600 mt-1">
+            {heroCount}
+          </p>
+        </div>
       </div>
 
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-ink/10 rounded p-5 mb-5 max-w-md space-y-3"
+          className="bg-white border border-ink/10 rounded-xl p-5 mb-5 max-w-md space-y-3"
         >
           {error && <p className="text-sm text-danger">{error}</p>}
           <input
-            placeholder="Title"
+            placeholder="Banner title"
             required
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="w-full border border-ink/15 rounded px-3 py-2 text-sm"
+            className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
           />
           <input
             placeholder="Image URL"
             required
             value={form.image}
             onChange={(e) => setForm({ ...form, image: e.target.value })}
-            className="w-full border border-ink/15 rounded px-3 py-2 text-sm"
+            className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
           />
+          {form.image && (
+            <img
+              src={form.image}
+              alt=""
+              className="w-full aspect-video object-cover rounded-lg"
+            />
+          )}
           <input
-            placeholder="Link (optional)"
+            placeholder="Link URL (optional)"
             value={form.link}
             onChange={(e) => setForm({ ...form, link: e.target.value })}
-            className="w-full border border-ink/15 rounded px-3 py-2 text-sm"
+            className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
           />
-          <select
-            value={form.position}
-            onChange={(e) => setForm({ ...form, position: e.target.value })}
-            className="w-full border border-ink/15 rounded px-3 py-2 text-sm"
-          >
-            <option value="hero">Hero</option>
-            <option value="promo">Promo</option>
-            <option value="featured">Featured</option>
-          </select>
-          <input
-            type="number"
-            placeholder="Display Order"
-            value={form.order}
-            onChange={(e) =>
-              setForm({ ...form, order: Number(e.target.value) })
-            }
-            className="w-full border border-ink/15 rounded px-3 py-2 text-sm"
-          />
-          <button
-            type="submit"
-            className="bg-ink text-white px-4 py-2 rounded text-sm"
-          >
-            Create
-          </button>
+          <div className="grid grid-cols-2 gap-3">
+            <select
+              value={form.position}
+              onChange={(e) => setForm({ ...form, position: e.target.value })}
+              className="border border-ink/10 rounded-lg px-3 py-2 text-sm"
+            >
+              <option value="hero">Hero</option>
+              <option value="promo">Promo</option>
+              <option value="featured">Featured</option>
+            </select>
+            <input
+              type="number"
+              placeholder="Display order"
+              value={form.order}
+              onChange={(e) =>
+                setForm({ ...form, order: Number(e.target.value) })
+              }
+              className="border border-ink/10 rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="bg-ink text-white px-4 py-2 rounded-lg text-sm"
+            >
+              Create
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="border border-ink/10 px-4 py-2 rounded-lg text-sm"
+            >
+              Cancel
+            </button>
+          </div>
         </form>
       )}
 
-      <div className="bg-white border border-ink/10 rounded overflow-x-auto">
+      <div className="bg-white border border-ink/10 rounded-xl overflow-hidden">
+        <div className="flex flex-col lg:flex-row gap-3 p-4 border-b border-ink/10">
+          <input
+            type="text"
+            placeholder="Search banners by title…"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="flex-1 border border-ink/10 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/30"
+          />
+          <div className="flex gap-2">
+            <select
+              value={positionFilter}
+              onChange={(e) => {
+                setPositionFilter(e.target.value);
+                setPage(1);
+              }}
+              className="border border-ink/10 rounded-lg px-3 py-2 text-sm flex-1 lg:flex-none"
+            >
+              <option value="">All Positions</option>
+              <option value="hero">Hero</option>
+              <option value="promo">Promo</option>
+              <option value="featured">Featured</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="border border-ink/10 rounded-lg px-3 py-2 text-sm flex-1 lg:flex-none"
+            >
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+
         {loading ? (
           <p className="p-6 text-ink/50">Loading…</p>
+        ) : !paginated.length ? (
+          <p className="text-center py-16 text-ink/50">
+            No banners created yet.
+          </p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-ink/40 border-b border-ink/10">
-                <th className="py-3 px-4">Image</th>
-                <th>Title</th>
-                <th>Position</th>
-                <th>Order</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {banners.map((b) => (
-                <tr key={b._id} className="border-b border-ink/5">
-                  <td className="py-3 px-4">
-                    <img
-                      src={b.image}
-                      alt=""
-                      className="w-16 h-10 object-cover rounded"
-                    />
-                  </td>
-                  <td>{b.title}</td>
-                  <td className="capitalize">{b.position}</td>
-                  <td>{b.order}</td>
-                  <td>
-                    <button
-                      onClick={() => toggleStatus(b)}
-                      className={
-                        b.status === "active" ? "text-green-600" : "text-ink/40"
-                      }
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[800px]">
+                <thead>
+                  <tr className="text-left text-ink/40 border-b border-ink/10 bg-cream/40 uppercase text-xs">
+                    <th className="py-3 px-4">Banner Preview</th>
+                    <th>Title & Target</th>
+                    <th>Position</th>
+                    <th>Order</th>
+                    <th>Status</th>
+                    <th className="pr-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginated.map((b) => (
+                    <tr
+                      key={b._id}
+                      className="border-b border-ink/5 hover:bg-cream/30"
                     >
-                      {b.status}
-                    </button>
-                  </td>
-                  <td>
+                      <td className="py-3 px-4">
+                        <img
+                          src={b.image}
+                          alt=""
+                          className="w-24 aspect-video object-cover rounded-lg"
+                        />
+                      </td>
+                      <td>
+                        <p className="font-medium text-ink">{b.title}</p>
+                        {b.link && (
+                          <p className="text-xs text-ink/40">🔗 {b.link}</p>
+                        )}
+                      </td>
+                      <td>
+                        <span
+                          className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${positionBadge[b.position]}`}
+                        >
+                          {b.position}
+                        </span>
+                      </td>
+                      <td>{b.order}</td>
+                      <td>
+                        <button
+                          onClick={() => toggleStatus(b)}
+                          className={`text-xs px-2.5 py-1 rounded-full font-medium ${b.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-ink/50"}`}
+                        >
+                          {b.status === "active" ? "Active" : "Inactive"}
+                        </button>
+                      </td>
+                      <td className="pr-4">
+                        <button
+                          onClick={() => setDeleteId(b._id)}
+                          className="text-danger"
+                        >
+                          🗑
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-4 border-t border-ink/10">
+              <p className="text-sm text-ink/50">
+                Showing {(page - 1) * PER_PAGE + 1} to{" "}
+                {Math.min(page * PER_PAGE, filtered.length)} of{" "}
+                {filtered.length} banners
+              </p>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 rounded-lg border border-ink/10 text-sm disabled:opacity-40"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .slice(0, 5)
+                  .map((n) => (
                     <button
-                      onClick={() => setDeleteId(b._id)}
-                      className="text-danger"
+                      key={n}
+                      onClick={() => setPage(n)}
+                      className={`w-9 h-9 rounded-lg text-sm ${page === n ? "bg-ink text-white" : "border border-ink/10 text-ink/60"}`}
                     >
-                      Delete
+                      {n}
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  ))}
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1.5 rounded-lg border border-ink/10 text-sm disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 
