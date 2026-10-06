@@ -24,6 +24,7 @@ export default function HeroBanner() {
   }, []);
 
   const bgImage = banner?.image || FALLBACK_IMG;
+  const bgPosition = banner?.objectPosition || "center";
 
   return (
     <section
@@ -32,15 +33,16 @@ export default function HeroBanner() {
     >
       <motion.div
         style={{ y, opacity }}
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0"
         initial={{ scale: 1.1 }}
         animate={{ scale: 1 }}
         transition={{ duration: 1.2, ease: "easeOut" }}
       >
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover"
           style={{
             backgroundImage: `linear-gradient(to top, rgba(20,17,15,0.8), rgba(20,17,15,0.15)), url('${bgImage}')`,
+            backgroundPosition: bgPosition,
           }}
         />
       </motion.div>

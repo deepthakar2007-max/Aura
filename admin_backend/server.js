@@ -4,22 +4,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const app = express();
-
-
-const allowedOrigins = [
-    "http://localhost:5173",
-    "https://adminfrontend-lilac.vercel.app",
-    "http://localhost:5174",
-    "https://aura-bay-beta.vercel.app"
-];
-
-app.use(cors({
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
-}));
-app.use(express.json({ limit: "5mb" }));
+app.use(cors());
+app.use(express.json({ limit: "12mb" }));
 
 const connectdb = require("./config/db");
 connectdb();

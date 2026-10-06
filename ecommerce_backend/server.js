@@ -1,15 +1,16 @@
 const express = require("express");
 const app = express();
 
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({ limit: "12mb" }));
+
 const cors = require("cors");
+app.use(cors());
 
 const dotenv = require("dotenv");
 dotenv.config();
 
 const connectdb = require("./config/db.js");
 connectdb();
-app.use(cors());
 
 const userrouter = require("./routes/user_routes.js");
 const productrouter = require("./routes/product_routes.js");
@@ -20,10 +21,8 @@ const categoryrouter = require("./routes/category_routes.js");
 const couponrouter = require("./routes/coupon_routes.js");
 const wishlistrouter = require('./routes/wishlist_routes.js')
 const addressrouter = require('./routes/address_routes.js')
-const orderrouter = require("./routes/order_routes.js");
-const bannerrouter = require("./routes/banner_routes.js");
-
-
+const orderrouter = require('./routes/order_routes.js')
+const bannerrouter = require('./routes/banner_routes.js')
 
 app.use("/auth/user", userrouter);
 app.use("/auth/product", productrouter);
@@ -37,7 +36,6 @@ app.use("/auth/wishlist", wishlistrouter);
 app.use("/auth/order", orderrouter);
 app.use("/auth/banner", bannerrouter);
 
-
 app.get("/", (req, res) => {
   res.send("server worked 💪");
 });
@@ -45,4 +43,3 @@ app.get("/", (req, res) => {
 app.listen(process.env.PORT || 5000, () => {
   console.log(`Server running on port ${process.env.PORT}`);
 });
-

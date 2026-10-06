@@ -16,6 +16,36 @@ const positionBadge = {
   featured: "bg-purple-100 text-purple-700",
 };
 
+const POSITION_OPTIONS = [
+  { value: "left top", label: "↖" },
+  { value: "center top", label: "↑" },
+  { value: "right top", label: "↗" },
+  { value: "left center", label: "←" },
+  { value: "center", label: "●" },
+  { value: "right center", label: "→" },
+  { value: "left bottom", label: "↙" },
+  { value: "center bottom", label: "↓" },
+  { value: "right bottom", label: "↘" },
+];
+
+const initialForm = {
+  title: "",
+  image: "",
+  link: "",
+  position: "hero",
+  objectPosition: "center",
+  order: 0,
+};
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function BannerList() {
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,14 +55,10 @@ export default function BannerList() {
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [form, setForm] = useState({
-    title: "",
-    image: "",
-    link: "",
-    position: "hero",
-    order: 0,
-  });
+  const [form, setForm] = useState(initialForm);
+  const [imageSource, setImageSource] = useState("url");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -45,16 +71,35 @@ export default function BannerList() {
     load();
   }, []);
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      setError("Image must be under 8MB");
+      return;
+    }
+    setError("");
+    const base64 = await fileToBase64(file);
+    setForm({ ...form, image: base64 });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (!form.image) {
+      setError("Please provide an image URL or upload a file");
+      return;
+    }
+    setBusy(true);
     try {
       await createBanner(form);
       setShowForm(false);
-      setForm({ title: "", image: "", link: "", position: "hero", order: 0 });
+      setForm(initialForm);
       load();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -131,9 +176,14 @@ export default function BannerList() {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-ink/10 rounded-xl p-5 mb-5 max-w-md space-y-3"
+          className="bg-white border border-ink/10 rounded-xl p-5 mb-5 max-w-2xl space-y-4"
         >
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && (
+            <p className="text-sm bg-red-50 text-danger border border-red-200 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
           <input
             placeholder="Banner title"
             required
@@ -141,26 +191,49 @@ export default function BannerList() {
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
           />
-          <input
-            placeholder="Image URL"
-            required
-            value={form.image}
-            onChange={(e) => setForm({ ...form, image: e.target.value })}
-            className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
-          />
-          {form.image && (
-            <img
-              src={form.image}
-              alt=""
-              className="w-full aspect-video object-cover rounded-lg"
-            />
-          )}
+
+          <div>
+            <div className="flex bg-cream/60 rounded-lg p-1 mb-3 w-fit">
+              <button
+                type="button"
+                onClick={() => setImageSource("url")}
+                className={`px-4 py-1.5 rounded-lg text-sm ${imageSource === "url" ? "bg-white shadow-sm" : "text-ink/50"}`}
+              >
+                Image URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setImageSource("upload")}
+                className={`px-4 py-1.5 rounded-lg text-sm ${imageSource === "upload" ? "bg-white shadow-sm" : "text-ink/50"}`}
+              >
+                Upload from PC
+              </button>
+            </div>
+
+            {imageSource === "url" ? (
+              <input
+                placeholder="https://..."
+                value={form.image.startsWith("data:") ? "" : form.image}
+                onChange={(e) => setForm({ ...form, image: e.target.value })}
+                className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
+              />
+            ) : (
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
+              />
+            )}
+          </div>
+
           <input
             placeholder="Link URL (optional)"
             value={form.link}
             onChange={(e) => setForm({ ...form, link: e.target.value })}
             className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
           />
+
           <div className="grid grid-cols-2 gap-3">
             <select
               value={form.position}
@@ -181,16 +254,62 @@ export default function BannerList() {
               className="border border-ink/10 rounded-lg px-3 py-2 text-sm"
             />
           </div>
+
+          {form.image && (
+            <div>
+              <p className="text-sm font-medium text-ink mb-2">
+                Image Focus Point
+              </p>
+              <p className="text-xs text-ink/40 mb-3">
+                Choose which part of the image stays visible when cropped on
+                different screens.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-1 w-32">
+                  {POSITION_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() =>
+                        setForm({ ...form, objectPosition: opt.value })
+                      }
+                      className={`aspect-square flex items-center justify-center text-sm rounded-lg border ${
+                        form.objectPosition === opt.value
+                          ? "bg-ink text-white border-ink"
+                          : "border-ink/15 text-ink/40 hover:border-ink/30"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex-1 aspect-video sm:aspect-auto sm:h-24 rounded-lg overflow-hidden border border-ink/10">
+                  <img
+                    src={form.image}
+                    alt="Preview"
+                    style={{ objectPosition: form.objectPosition }}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button
               type="submit"
-              className="bg-ink text-white px-4 py-2 rounded-lg text-sm"
+              disabled={busy}
+              className="bg-ink text-white px-4 py-2 rounded-lg text-sm disabled:opacity-60"
             >
-              Create
+              {busy ? "Saving…" : "Create"}
             </button>
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={() => {
+                setShowForm(false);
+                setForm(initialForm);
+                setError("");
+              }}
               className="border border-ink/10 px-4 py-2 rounded-lg text-sm"
             >
               Cancel
@@ -270,6 +389,9 @@ export default function BannerList() {
                         <img
                           src={b.image}
                           alt=""
+                          style={{
+                            objectPosition: b.objectPosition || "center",
+                          }}
                           className="w-24 aspect-video object-cover rounded-lg"
                         />
                       </td>
