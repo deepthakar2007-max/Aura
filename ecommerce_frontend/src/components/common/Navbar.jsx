@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
+import { Menu, X, Search, Heart, ShoppingBag, User } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
@@ -48,8 +49,13 @@ export default function Navbar() {
   const navLinks = [
     { to: "/shop", label: "Shop" },
     { to: "/categories", label: "Categories" },
-    { to: "/wishlist", label: "Wishlist", count: wishlistItems.length },
-    { to: "/cart", label: "Cart", count: totalItems },
+    {
+      to: "/wishlist",
+      label: "Wishlist",
+      count: wishlistItems.length,
+      icon: Heart,
+    },
+    { to: "/cart", label: "Cart", count: totalItems, icon: ShoppingBag },
     { to: "/orders", label: "Orders" },
   ];
 
@@ -66,20 +72,9 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-5 sm:px-8 h-20 flex items-center gap-4 sm:gap-10">
         <button
           onClick={() => setMobileMenu((o) => !o)}
-          className="md:hidden flex flex-col gap-1.5 w-6 flex-shrink-0"
+          className="md:hidden text-ink flex-shrink-0"
         >
-          <motion.span
-            animate={{ rotate: mobileMenu ? 45 : 0, y: mobileMenu ? 6 : 0 }}
-            className="h-px bg-ink block"
-          />
-          <motion.span
-            animate={{ opacity: mobileMenu ? 0 : 1 }}
-            className="h-px bg-ink block"
-          />
-          <motion.span
-            animate={{ rotate: mobileMenu ? -45 : 0, y: mobileMenu ? -6 : 0 }}
-            className="h-px bg-ink block"
-          />
+          {mobileMenu ? <X size={22} /> : <Menu size={22} />}
         </button>
 
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
@@ -96,6 +91,7 @@ export default function Navbar() {
               to={link.to}
               className="relative py-2 group flex items-center gap-1.5 hover:text-ink transition-colors"
             >
+              {link.icon && <link.icon size={15} />}
               {link.label}
               <AnimatePresence mode="popLayout">
                 {link.count > 0 && (
@@ -130,9 +126,9 @@ export default function Navbar() {
             />
             <button
               type="submit"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 text-sm"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40"
             >
-              ⌕
+              <Search size={15} />
             </button>
           </div>
         </form>
@@ -151,7 +147,7 @@ export default function Navbar() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              user?.username?.[0]?.toUpperCase() || "?"
+              <User size={16} />
             )}
           </motion.button>
 
@@ -173,7 +169,7 @@ export default function Navbar() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      user?.username?.[0]?.toUpperCase()
+                      <User size={14} />
                     )}
                   </div>
                   <div className="min-w-0">
@@ -232,9 +228,9 @@ export default function Navbar() {
                   />
                   <button
                     type="submit"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 text-sm"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40"
                   >
-                    ⌕
+                    <Search size={15} />
                   </button>
                 </div>
               </form>
@@ -245,7 +241,9 @@ export default function Navbar() {
                   onClick={() => setMobileMenu(false)}
                   className="flex items-center justify-between py-2.5 text-sm text-ink/70 border-b border-ink/5"
                 >
-                  {link.label}
+                  <span className="flex items-center gap-2">
+                    {link.icon && <link.icon size={16} />} {link.label}
+                  </span>
                   {link.count > 0 && (
                     <span className="bg-accent text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
                       {link.count}

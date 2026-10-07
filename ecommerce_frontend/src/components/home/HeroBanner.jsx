@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
+import { ArrowRight } from "lucide-react";
 import { getBanners } from "../../api/bannerApi";
 
 const FALLBACK_IMG =
@@ -29,19 +30,16 @@ export default function HeroBanner() {
   return (
     <section
       ref={ref}
-      className="relative h-[500px] sm:h-[600px] overflow-hidden flex items-end"
+      className="relative h-[550px] sm:h-[650px] overflow-hidden flex items-end bg-ink"
     >
       <motion.div
         style={{ y, opacity }}
-        className="absolute inset-0"
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
+        className="absolute inset-0 overflow-hidden"
       >
         <div
-          className="absolute inset-0 bg-cover"
+          className="absolute inset-0 bg-cover animate-slow-zoom"
           style={{
-            backgroundImage: `linear-gradient(to top, rgba(20,17,15,0.8), rgba(20,17,15,0.15)), url('${bgImage}')`,
+            backgroundImage: `linear-gradient(to top, rgba(20,17,15,0.85), rgba(20,17,15,0.2)), url('${bgImage}')`,
             backgroundPosition: bgPosition,
           }}
         />
@@ -64,7 +62,7 @@ export default function HeroBanner() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="font-display text-3xl sm:text-5xl text-white leading-tight"
           >
-            {banner?.title || "Timeless Elegance, Modern Luxury"}
+            {banner?.title || "Timeless Elegance, Redefined"}
           </motion.h1>
 
           <motion.p
@@ -87,17 +85,17 @@ export default function HeroBanner() {
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Link
                 to={banner?.link || "/shop"}
-                className="block bg-white text-ink text-xs tracking-widest uppercase px-6 py-3.5 hover:bg-cream transition-colors"
+                className="flex items-center gap-2 bg-white text-ink text-xs tracking-widest uppercase px-6 py-3.5 hover:bg-cream transition-colors"
               >
-                Explore Collection
+                Explore Collection <ArrowRight size={14} />
               </Link>
             </motion.div>
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="border border-white text-white text-xs tracking-widest uppercase px-6 py-3.5 hover:bg-white/10 transition-colors"
+              className="bg-white/10 backdrop-blur-md border border-white/40 text-white text-xs tracking-widest uppercase px-6 py-3.5 hover:bg-white/20 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all"
             >
-              Private Viewings
+              View The Lookbook
             </motion.button>
           </motion.div>
         </div>

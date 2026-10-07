@@ -14,6 +14,7 @@ const positionBadge = {
   hero: "bg-amber-100 text-amber-700",
   promo: "bg-blue-100 text-blue-700",
   featured: "bg-purple-100 text-purple-700",
+  editorial: "bg-pink-100 text-pink-700",
 };
 
 const POSITION_OPTIONS = [
@@ -34,6 +35,8 @@ const initialForm = {
   link: "",
   position: "hero",
   objectPosition: "center",
+  storyTitle: "",
+  storyText: "",
   order: 0,
 };
 
@@ -143,7 +146,7 @@ export default function BannerList() {
         </button>
       </div>
       <p className="text-sm text-ink/50 mb-6">
-        Manage homepage banners and promotional sections.
+        Manage homepage banners, editorial stories, and promotional sections.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -243,6 +246,7 @@ export default function BannerList() {
               <option value="hero">Hero</option>
               <option value="promo">Promo</option>
               <option value="featured">Featured</option>
+              <option value="editorial">Editorial (The Curated Edit)</option>
             </select>
             <input
               type="number"
@@ -255,14 +259,35 @@ export default function BannerList() {
             />
           </div>
 
+          {form.position === "editorial" && (
+            <div className="border-t border-ink/10 pt-4 space-y-3">
+              <p className="text-sm font-medium text-ink">
+                Editorial Story Content
+              </p>
+              <input
+                placeholder="Story headline (e.g. 'The Midnight Minimalist Edit')"
+                value={form.storyTitle}
+                onChange={(e) =>
+                  setForm({ ...form, storyTitle: e.target.value })
+                }
+                className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
+              />
+              <textarea
+                placeholder="Story narrative text…"
+                rows={4}
+                value={form.storyText}
+                onChange={(e) =>
+                  setForm({ ...form, storyText: e.target.value })
+                }
+                className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+          )}
+
           {form.image && (
             <div>
               <p className="text-sm font-medium text-ink mb-2">
                 Image Focus Point
-              </p>
-              <p className="text-xs text-ink/40 mb-3">
-                Choose which part of the image stays visible when cropped on
-                different screens.
               </p>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="grid grid-cols-3 gap-1 w-32">
@@ -343,6 +368,7 @@ export default function BannerList() {
               <option value="hero">Hero</option>
               <option value="promo">Promo</option>
               <option value="featured">Featured</option>
+              <option value="editorial">Editorial</option>
             </select>
             <select
               value={statusFilter}

@@ -50,6 +50,11 @@ export default function CategoryPage() {
               <h2 className="font-display text-2xl text-brandDark capitalize">
                 {activeCategory.name}
               </h2>
+              {activeCategory.tagline && (
+                <p className="text-accent text-sm mt-1">
+                  {activeCategory.tagline}
+                </p>
+              )}
               <p className="text-ink/60 mt-1">{activeCategory.description}</p>
             </div>
           </ScrollReveal>

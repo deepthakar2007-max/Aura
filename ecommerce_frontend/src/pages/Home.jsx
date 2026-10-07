@@ -1,6 +1,6 @@
-import AnnouncementBar from "../components/home/AnnouncementBar";
 import HeroBanner from "../components/home/HeroBanner";
 import CategoryShowcase from "../components/home/CategoryShowcase";
+import EditorialSection from "../components/home/EditorialSection";
 import LimitedPromo from "../components/home/LimitedPromo";
 import NewArrivals from "../components/home/NewArrivals";
 import Philosophy from "../components/home/Philosophy";
@@ -10,14 +10,8 @@ export default function Home() {
   return (
     <div>
       <HeroBanner />
-
-      <ScrollReveal>
-        <AnnouncementBar />
-      </ScrollReveal>
-
-      <ScrollReveal>
-        <CategoryShowcase />
-      </ScrollReveal>
+      <CategoryShowcase />
+      <EditorialSection />
 
       <ScrollReveal>
         <LimitedPromo />
