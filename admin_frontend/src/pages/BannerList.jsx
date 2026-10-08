@@ -17,6 +17,15 @@ const positionBadge = {
   editorial: "bg-pink-100 text-pink-700",
 };
 
+const positionHint = {
+  hero: "Homepage top slider. 3-4 banners banao, Order 1,2,3,4 set karo aur har ka slide time daalo.",
+  promo:
+    "Limited edition section (countdown wala). Pehli active promo banner dikhegi.",
+  featured: "Featured cards strip. Max 3 active banners dikhenge.",
+  editorial:
+    "The Curated Edit story section. Pehli active editorial banner dikhegi.",
+};
+
 const POSITION_OPTIONS = [
   { value: "left top", label: "↖" },
   { value: "center top", label: "↑" },
@@ -37,15 +46,25 @@ const initialForm = {
   objectPosition: "center",
   storyTitle: "",
   storyText: "",
+  duration: 6,
   order: 0,
 };
 
-function fileToBase64(file) {
+function compressImage(file, maxWidth = 1920, quality = 0.82) {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = reject;
+    img.src = url;
   });
 }
 
@@ -57,6 +76,7 @@ export default function BannerList() {
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [form, setForm] = useState(initialForm);
   const [imageSource, setImageSource] = useState("url");
@@ -74,16 +94,44 @@ export default function BannerList() {
     load();
   }, []);
 
+  const openAdd = () => {
+    setForm(initialForm);
+    setEditingId(null);
+    setImageSource("url");
+    setError("");
+    setShowForm(true);
+  };
+
+  const openEdit = (b) => {
+    setForm({ ...initialForm, ...b });
+    setEditingId(b._id);
+    setImageSource("url");
+    setError("");
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(initialForm);
+    setError("");
+  };
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) {
-      setError("Image must be under 8MB");
+    if (file.size > 15 * 1024 * 1024) {
+      setError("Image must be under 15MB");
       return;
     }
     setError("");
-    const base64 = await fileToBase64(file);
-    setForm({ ...form, image: base64 });
+    try {
+      const compressed = await compressImage(file);
+      setForm((f) => ({ ...f, image: compressed }));
+    } catch {
+      setError("Could not read this image. Try another file.");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -95,9 +143,20 @@ export default function BannerList() {
     }
     setBusy(true);
     try {
-      await createBanner(form);
-      setShowForm(false);
-      setForm(initialForm);
+      const payload = {
+        title: form.title,
+        image: form.image,
+        link: form.link,
+        position: form.position,
+        objectPosition: form.objectPosition,
+        storyTitle: form.storyTitle,
+        storyText: form.storyText,
+        duration: Number(form.duration) || 6,
+        order: Number(form.order) || 0,
+      };
+      if (editingId) await updateBanner(editingId, payload);
+      else await createBanner(payload);
+      closeForm();
       load();
     } catch (err) {
       setError(err.message);
@@ -129,7 +188,9 @@ export default function BannerList() {
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   const activeCount = banners.filter((b) => b.status === "active").length;
-  const heroCount = banners.filter((b) => b.position === "hero").length;
+  const heroCount = banners.filter(
+    (b) => b.position === "hero" && b.status === "active",
+  ).length;
 
   return (
     <AdminLayout>
@@ -139,14 +200,14 @@ export default function BannerList() {
       <div className="flex items-start justify-between flex-wrap gap-3 mb-1">
         <h1 className="text-2xl font-semibold text-ink">Banners / CMS</h1>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={openAdd}
           className="bg-ink text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-ink/85 transition-colors whitespace-nowrap"
         >
           + Add Banner
         </button>
       </div>
       <p className="text-sm text-ink/50 mb-6">
-        Manage homepage banners, editorial stories, and promotional sections.
+        Manage hero slider, promo, featured cards and editorial story.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -168,7 +229,7 @@ export default function BannerList() {
         </div>
         <div className="bg-white border border-ink/10 rounded-xl p-4">
           <p className="text-xs uppercase tracking-wide text-ink/40">
-            Hero Position Count
+            Active Hero Slides
           </p>
           <p className="text-2xl font-semibold text-amber-600 mt-1">
             {heroCount}
@@ -181,6 +242,9 @@ export default function BannerList() {
           onSubmit={handleSubmit}
           className="bg-white border border-ink/10 rounded-xl p-5 mb-5 max-w-2xl space-y-4"
         >
+          <p className="font-medium text-ink">
+            {editingId ? "Edit Banner" : "Add Banner"}
+          </p>
           {error && (
             <p className="text-sm bg-red-50 text-danger border border-red-200 rounded-lg px-3 py-2">
               {error}
@@ -194,6 +258,22 @@ export default function BannerList() {
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
           />
+
+          <div>
+            <select
+              value={form.position}
+              onChange={(e) => setForm({ ...form, position: e.target.value })}
+              className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
+            >
+              <option value="hero">Hero (slider)</option>
+              <option value="promo">Promo (limited edition)</option>
+              <option value="featured">Featured (cards)</option>
+              <option value="editorial">Editorial (The Curated Edit)</option>
+            </select>
+            <p className="text-xs text-ink/40 mt-1.5">
+              {positionHint[form.position]}
+            </p>
+          </div>
 
           <div>
             <div className="flex bg-cream/60 rounded-lg p-1 mb-3 w-fit">
@@ -228,60 +308,70 @@ export default function BannerList() {
                 className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
               />
             )}
+            {editingId && (
+              <p className="text-xs text-ink/40 mt-1.5">
+                Image change nahi karni to jaisa hai waisa chhod do.
+              </p>
+            )}
           </div>
 
           <input
-            placeholder="Link URL (optional)"
+            placeholder="Link (e.g. /shop?category=men)"
             value={form.link}
             onChange={(e) => setForm({ ...form, link: e.target.value })}
             className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <select
-              value={form.position}
-              onChange={(e) => setForm({ ...form, position: e.target.value })}
-              className="border border-ink/10 rounded-lg px-3 py-2 text-sm"
-            >
-              <option value="hero">Hero</option>
-              <option value="promo">Promo</option>
-              <option value="featured">Featured</option>
-              <option value="editorial">Editorial (The Curated Edit)</option>
-            </select>
-            <input
-              type="number"
-              placeholder="Display order"
-              value={form.order}
-              onChange={(e) =>
-                setForm({ ...form, order: Number(e.target.value) })
-              }
-              className="border border-ink/10 rounded-lg px-3 py-2 text-sm"
-            />
+            <div>
+              <label className="text-xs text-ink/50">Display order</label>
+              <input
+                type="number"
+                value={form.order}
+                onChange={(e) => setForm({ ...form, order: e.target.value })}
+                className="mt-1 w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+            {form.position === "hero" && (
+              <div>
+                <label className="text-xs text-ink/50">
+                  Slide duration (seconds)
+                </label>
+                <input
+                  type="number"
+                  min="2"
+                  max="30"
+                  value={form.duration}
+                  onChange={(e) =>
+                    setForm({ ...form, duration: e.target.value })
+                  }
+                  className="mt-1 w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+            )}
           </div>
 
           {form.position === "editorial" && (
-            <div className="border-t border-ink/10 pt-4 space-y-3">
-              <p className="text-sm font-medium text-ink">
-                Editorial Story Content
-              </p>
-              <input
-                placeholder="Story headline (e.g. 'The Midnight Minimalist Edit')"
-                value={form.storyTitle}
-                onChange={(e) =>
-                  setForm({ ...form, storyTitle: e.target.value })
-                }
-                className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
-              />
-              <textarea
-                placeholder="Story narrative text…"
-                rows={4}
-                value={form.storyText}
-                onChange={(e) =>
-                  setForm({ ...form, storyText: e.target.value })
-                }
-                className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
-              />
-            </div>
+            <input
+              placeholder="Story headline (e.g. The Midnight Minimalist Edit)"
+              value={form.storyTitle}
+              onChange={(e) => setForm({ ...form, storyTitle: e.target.value })}
+              className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
+            />
+          )}
+
+          {form.position !== "featured" && (
+            <textarea
+              placeholder={
+                form.position === "editorial"
+                  ? "Story narrative text…"
+                  : "Short description (optional)"
+              }
+              rows={3}
+              value={form.storyText}
+              onChange={(e) => setForm({ ...form, storyText: e.target.value })}
+              className="w-full border border-ink/10 rounded-lg px-3 py-2 text-sm"
+            />
           )}
 
           {form.image && (
@@ -326,15 +416,11 @@ export default function BannerList() {
               disabled={busy}
               className="bg-ink text-white px-4 py-2 rounded-lg text-sm disabled:opacity-60"
             >
-              {busy ? "Saving…" : "Create"}
+              {busy ? "Saving…" : editingId ? "Update" : "Create"}
             </button>
             <button
               type="button"
-              onClick={() => {
-                setShowForm(false);
-                setForm(initialForm);
-                setError("");
-              }}
+              onClick={closeForm}
               className="border border-ink/10 px-4 py-2 rounded-lg text-sm"
             >
               Cancel
@@ -426,6 +512,11 @@ export default function BannerList() {
                         {b.link && (
                           <p className="text-xs text-ink/40">🔗 {b.link}</p>
                         )}
+                        {b.position === "hero" && (
+                          <p className="text-xs text-ink/40">
+                            ⏱ {b.duration || 6}s
+                          </p>
+                        )}
                       </td>
                       <td>
                         <span
@@ -444,12 +535,20 @@ export default function BannerList() {
                         </button>
                       </td>
                       <td className="pr-4">
-                        <button
-                          onClick={() => setDeleteId(b._id)}
-                          className="text-danger"
-                        >
-                          🗑
-                        </button>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => openEdit(b)}
+                            className="text-accent"
+                          >
+                            ✎
+                          </button>
+                          <button
+                            onClick={() => setDeleteId(b._id)}
+                            className="text-danger"
+                          >
+                            🗑
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -9,6 +9,7 @@ const bannerSchema = new mongoose.Schema(
         objectPosition: { type: String, default: "center" },
         storyTitle: { type: String, default: "" },
         storyText: { type: String, default: "" },
+        duration: { type: Number, default: 6 },
         order: { type: Number, default: 0 },
         status: { type: String, enum: ["active", "inactive"], default: "active" },
     },

@@ -5,11 +5,14 @@ const {
   deleteproduct,
   getsingleproduct,
   getmultipleproduct,
+  getbestsellers,
 } = require("./../controller/product_controll");
 
 const router = express.Router();
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
+
+router.get("/bestsellers", getbestsellers);
 
 router.get("/product/:id", getsingleproduct);
 
