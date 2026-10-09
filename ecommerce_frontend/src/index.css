@@ -28,3 +28,13 @@ body {
 .animate-slow-zoom {
     animation: slowZoom 18s ease-out forwards;
 }
+
+.has-bottom-nav {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+    .has-bottom-nav {
+        padding-bottom: 0;
+    }
+}
