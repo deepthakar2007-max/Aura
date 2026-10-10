@@ -5,15 +5,14 @@ export default function ProductFilterSidebar({
   inStockOnly,
   onToggleInStock,
   priceRange,
+  maxPrice,
   onPriceChange,
   onReset,
 }) {
   return (
     <aside className="w-full md:w-64 flex-shrink-0">
       <div className="flex items-center justify-between mb-6">
-        <p className="font-medium text-ink flex items-center gap-2">
-          ⚏ Filters
-        </p>
+        <p className="font-medium text-ink">Filters</p>
         <button
           onClick={onReset}
           className="text-xs text-ink/40 underline hover:text-ink"
@@ -44,8 +43,8 @@ export default function ProductFilterSidebar({
             >
               <input
                 type="checkbox"
-                checked={selectedCategories.includes(cat.name)}
-                onChange={() => onToggleCategory(cat.name)}
+                checked={selectedCategories.includes(cat.name.toLowerCase())}
+                onChange={() => onToggleCategory(cat.name.toLowerCase())}
                 className="accent-ink w-4 h-4"
               />
               <span className="text-sm text-ink/70 capitalize">{cat.name}</span>
@@ -56,13 +55,13 @@ export default function ProductFilterSidebar({
 
       <div>
         <p className="text-xs tracking-widest uppercase text-ink/40 mb-3">
-          Price Range
+          Max Price
         </p>
         <input
           type="range"
           min="0"
-          max="50000"
-          step="500"
+          max={maxPrice}
+          step={maxPrice > 20000 ? 500 : 100}
           value={priceRange}
           onChange={(e) => onPriceChange(Number(e.target.value))}
           className="w-full accent-ink"
@@ -70,7 +69,7 @@ export default function ProductFilterSidebar({
         <div className="flex justify-between text-xs text-ink/50 mt-2">
           <span>₹0</span>
           <span className="font-medium text-ink">
-            ₹{priceRange.toLocaleString("en-IN")}+
+            ₹{priceRange.toLocaleString("en-IN")}
           </span>
         </div>
       </div>

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
+import { Heart } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useWishlist } from "../../hooks/useWishlist";
-import { staggerItemVariants } from "../animations/StaggerContainer";
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, index = 0 }) {
   const { token } = useAuth();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const [busy, setBusy] = useState(false);
@@ -19,9 +19,11 @@ export default function ProductCard({ product }) {
           ? { text: "New", color: "bg-ink" }
           : null;
 
+  const wished = isWishlisted(product._id);
+
   const handleWishlist = async (e) => {
     e.preventDefault();
-    if (!token) return;
+    if (!token || busy) return;
     setBusy(true);
     try {
       await toggleWishlist(product._id);
@@ -32,9 +34,21 @@ export default function ProductCard({ product }) {
 
   return (
     <motion.div
-      variants={staggerItemVariants}
-      whileHover={{ y: -8 }}
-      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: 0.5,
+          delay: (index % 4) * 0.08,
+          ease: "easeOut",
+        },
+      }}
+      whileHover={{
+        y: -6,
+        transition: { type: "spring", stiffness: 300, damping: 22 },
+      }}
+      viewport={{ once: true, amount: 0.1 }}
       className="group"
     >
       <div className="relative aspect-square bg-cream overflow-hidden mb-4">
@@ -48,22 +62,27 @@ export default function ProductCard({ product }) {
         <motion.button
           onClick={handleWishlist}
           disabled={busy}
+          aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.8 }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-sm z-10"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center z-10"
         >
-          {isWishlisted(product._id) ? "♥" : "♡"}
+          <Heart
+            size={15}
+            className={wished ? "text-red-500" : "text-ink"}
+            fill={wished ? "currentColor" : "none"}
+          />
         </motion.button>
         <Link
           to={`/product/${product._id}`}
           className="block w-full h-full overflow-hidden"
         >
-          <motion.img
+          <img
             src={product.img}
             alt={product.name}
-            whileHover={{ scale: 1.08 }}
-            transition={{ duration: 0.4 }}
-            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
       </div>

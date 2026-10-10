@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { getProducts } from "../../api/productApi";
 import ProductCard from "./ProductCard";
 import ScrollReveal from "../animations/ScrollReveal";
-import StaggerContainer from "../animations/StaggerContainer";
 
 export default function RelatedProducts({ category, excludeId }) {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    getProducts(`?category=${category}`)
+    getProducts(`?category=${encodeURIComponent(category)}`)
       .then((res) =>
         setItems(res.data.filter((p) => p._id !== excludeId).slice(0, 3)),
       )
@@ -27,11 +26,11 @@ export default function RelatedProducts({ category, excludeId }) {
           Complete the Collection
         </h2>
       </ScrollReveal>
-      <StaggerContainer className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {items.map((p) => (
-          <ProductCard key={p._id} product={p} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+        {items.map((p, i) => (
+          <ProductCard key={p._id} product={p} index={i} />
         ))}
-      </StaggerContainer>
+      </div>
     </section>
   );
 }

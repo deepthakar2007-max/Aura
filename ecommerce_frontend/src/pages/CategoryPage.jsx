@@ -5,7 +5,6 @@ import CategoryGrid from "../components/category/CategoryGrid";
 import ProductCard from "../components/product/ProductCard";
 import FadeUp from "../components/animations/FadeUp";
 import ScrollReveal from "../components/animations/ScrollReveal";
-import StaggerContainer from "../components/animations/StaggerContainer";
 
 export default function CategoryPage() {
   const [categories, setCategories] = useState([]);
@@ -23,7 +22,7 @@ export default function CategoryPage() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    const query = selected ? `?category=${selected}` : "";
+    const query = selected ? `?category=${encodeURIComponent(selected)}` : "";
     getProducts(query)
       .then((res) => setProducts(res.data))
       .catch((err) => setError(err.message))
@@ -34,7 +33,7 @@ export default function CategoryPage() {
 
   return (
     <FadeUp>
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-5 sm:px-6 py-12">
         <h1 className="font-display text-3xl text-brandDark mb-6">
           Browse by category
         </h1>
@@ -61,7 +60,7 @@ export default function CategoryPage() {
         )}
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
@@ -74,11 +73,14 @@ export default function CategoryPage() {
         ) : !products.length ? (
           <p className="text-ink/50 text-center py-16">No products found.</p>
         ) : (
-          <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((p) => (
-              <ProductCard key={p._id} product={p} />
+          <div
+            key={selected}
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+          >
+            {products.map((p, i) => (
+              <ProductCard key={p._id} product={p} index={i} />
             ))}
-          </StaggerContainer>
+          </div>
         )}
       </div>
     </FadeUp>

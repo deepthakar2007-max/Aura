@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useCallback } from "react";
+import { createContext, useState, useEffect, useCallback, useRef } from "react";
 import { loginUser, registerUser, fetchCurrentUser } from "../api/authApi";
 
 export const AuthContext = createContext(null);
@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
+  const retries = useRef(0);
 
   const loadUser = useCallback(async () => {
     const savedToken = localStorage.getItem("token");
@@ -16,11 +17,17 @@ export function AuthProvider({ children }) {
     }
     try {
       const res = await fetchCurrentUser();
+      retries.current = 0;
       setUser(res.data);
-    } catch {
-      localStorage.removeItem("token");
-      setToken(null);
-      setUser(null);
+    } catch (err) {
+      if ([401, 403, 404].includes(err.status)) {
+        localStorage.removeItem("token");
+        setToken(null);
+        setUser(null);
+      } else if (retries.current < 5) {
+        retries.current += 1;
+        setTimeout(loadUser, 5000);
+      }
     } finally {
       setLoading(false);
     }

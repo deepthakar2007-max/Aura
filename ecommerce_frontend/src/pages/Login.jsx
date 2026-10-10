@@ -1,113 +1,122 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import AnimatedButton from "../components/animations/AnimatedButton";
+import AuthShell from "../components/auth/AuthShell";
+import AuthField from "../components/auth/AuthField";
+import AuthAlert from "../components/auth/AuthAlert";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
+  const { state } = useLocation();
+  const [form, setForm] = useState({ email: state?.email || "", password: "" });
+  const [errors, setErrors] = useState({});
+  const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const setField = (name) => (e) => {
+    setForm((f) => ({ ...f, [name]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined, form: undefined }));
+  };
+
+  const validate = () => {
+    const found = {};
+    if (!form.email.trim()) found.email = "Please enter your email";
+    else if (!EMAIL_RE.test(form.email.trim()))
+      found.email = "Please enter a valid email address";
+    if (!form.password) found.password = "Please enter your password";
+    return found;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    const found = validate();
+    if (Object.keys(found).length) return setErrors(found);
+
     setBusy(true);
     try {
-      await login(form);
-      navigate("/");
+      await login({ email: form.email.trim(), password: form.password });
+      navigate("/", { replace: true });
     } catch (err) {
-      setError(err.message);
+      if (err.field === "email" || err.field === "password")
+        setErrors({ [err.field]: err.message });
+      else setErrors({ form: err.message });
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] grid md:grid-cols-2">
-      <motion.div
-        initial={{ opacity: 0, x: -40 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6 }}
-        className="hidden md:flex flex-col justify-between bg-brandDark text-paper p-12"
-      >
-        <span className="font-display text-2xl">Fern & Field</span>
-        <p className="font-display text-4xl leading-tight max-w-sm">
-          Good things, gathered with care.
-        </p>
-        <span className="text-paper/60 text-sm">Welcome back.</span>
-      </motion.div>
+    <AuthShell
+      title="Welcome back"
+      subtitle="Sign in to continue shopping."
+      footer={
+        <>
+          New to AURA?{" "}
+          <Link to="/register" className="text-brandDark font-medium underline">
+            Create an account
+          </Link>
+        </>
+      }
+    >
+      {state?.notice && <AuthAlert type="success">{state.notice}</AuthAlert>}
+      {errors.form && <AuthAlert>{errors.form}</AuthAlert>}
 
-      <div className="flex items-center justify-center p-8">
-        <motion.form
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          onSubmit={handleSubmit}
-          className="w-full max-w-sm space-y-5"
-        >
-          <div>
-            <h1 className="font-display text-3xl text-brandDark">Sign in</h1>
-            <p className="text-ink/60 text-sm mt-1">
-              Enter your details to continue.
-            </p>
-          </div>
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <AuthField
+          label="Email"
+          name="email"
+          type="email"
+          icon={Mail}
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={form.email}
+          onChange={setField("email")}
+          error={errors.email}
+        />
 
-          {error && (
-            <motion.p
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-sm bg-red-50 text-red-700 border border-red-200 rounded-lg px-3 py-2"
+        <AuthField
+          label="Password"
+          name="password"
+          icon={Lock}
+          autoComplete="current-password"
+          type={showPw ? "text" : "password"}
+          placeholder="Your password"
+          value={form.password}
+          onChange={setField("password")}
+          error={errors.password}
+          labelRight={
+            <Link
+              to="/forgot-password"
+              className="text-xs text-brandDark underline"
             >
-              {error}
-            </motion.p>
-          )}
-
-          <div>
-            <label className="text-sm text-ink/70">Email</label>
-            <input
-              type="email"
-              name="email"
-              required
-              value={form.email}
-              onChange={handleChange}
-              className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand transition-shadow"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-ink/70">Password</label>
-            <input
-              type="password"
-              name="password"
-              required
-              value={form.password}
-              onChange={handleChange}
-              className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand transition-shadow"
-            />
-          </div>
-
-          <AnimatedButton
-            type="submit"
-            disabled={busy}
-            className="w-full bg-brandDark text-paper py-2.5 rounded-lg hover:bg-brand transition-colors disabled:opacity-60"
-          >
-            {busy ? "Signing in…" : "Sign in"}
-          </AnimatedButton>
-
-          <p className="text-sm text-ink/60">
-            New here?{" "}
-            <Link to="/register" className="text-brandDark underline">
-              Create an account
+              Forgot password?
             </Link>
-          </p>
-        </motion.form>
-      </div>
-    </div>
+          }
+          right={
+            <button
+              type="button"
+              onClick={() => setShowPw((s) => !s)}
+              aria-label={showPw ? "Hide password" : "Show password"}
+              className="text-ink/40 hover:text-ink"
+            >
+              {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          }
+        />
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full bg-brandDark text-paper py-3 rounded-lg text-sm font-medium hover:bg-brand transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {busy && <Loader2 size={16} className="animate-spin" />}
+          {busy ? "Signing in…" : "Sign in"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

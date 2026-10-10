@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import ForgotPassword from "../pages/ForgotPassword";
 import Profile from "../pages/Profile";
 import Home from "../pages/Home";
 import ProductPage from "../pages/ProductPage";
@@ -53,6 +54,14 @@ export default function AppRoutes() {
         element={
           <RedirectIfAuth>
             <Register />
+          </RedirectIfAuth>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <RedirectIfAuth>
+            <ForgotPassword />
           </RedirectIfAuth>
         }
       />

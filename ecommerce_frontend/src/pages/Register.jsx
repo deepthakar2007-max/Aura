@@ -1,184 +1,182 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { User, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { sendOtp, verifyOtp } from "../api/authApi";
-import AnimatedButton from "../components/animations/AnimatedButton";
+import AuthShell from "../components/auth/AuthShell";
+import AuthField from "../components/auth/AuthField";
+import AuthAlert from "../components/auth/AuthAlert";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const LEVELS = ["Too short", "Weak", "Fair", "Good", "Strong"];
+const COLORS = [
+  "bg-ink/10",
+  "bg-red-400",
+  "bg-amber-400",
+  "bg-lime-500",
+  "bg-green-600",
+];
+
+function strength(pw) {
+  if (pw.length < 6) return 0;
+  let s = 1;
+  if (pw.length >= 10) s++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s++;
+  if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) s++;
+  return Math.min(s, 4);
+}
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, login } = useAuth();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
-    password: "",
-    otp: "",
-  });
-  const [error, setError] = useState("");
+  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [errors, setErrors] = useState({});
+  const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const level = strength(form.password);
 
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
-    setError("");
-    setBusy(true);
-    try {
-      await sendOtp(form.email);
-      setStep(2);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+  const setField = (name) => (e) => {
+    setForm((f) => ({ ...f, [name]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined, form: undefined }));
   };
 
-  const handleVerifyAndRegister = async (e) => {
+  const validate = () => {
+    const found = {};
+    if (form.username.trim().length < 2)
+      found.username = "Please enter your full name";
+    if (!form.email.trim()) found.email = "Please enter your email";
+    else if (!EMAIL_RE.test(form.email.trim()))
+      found.email = "Please enter a valid email address";
+    if (!form.password) found.password = "Please create a password";
+    else if (form.password.length < 6)
+      found.password = "Password must be at least 6 characters";
+    return found;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    const found = validate();
+    if (Object.keys(found).length) return setErrors(found);
+
     setBusy(true);
+    const payload = {
+      username: form.username.trim(),
+      email: form.email.trim(),
+      password: form.password,
+    };
     try {
-      await verifyOtp(form.email, form.otp);
-      await register(form);
-      navigate("/login");
+      await register(payload);
     } catch (err) {
-      setError(err.message);
+      if (["username", "email", "password"].includes(err.field))
+        setErrors({ [err.field]: err.message });
+      else setErrors({ form: err.message });
+      setBusy(false);
+      return;
+    }
+
+    try {
+      await login({ email: payload.email, password: payload.password });
+      navigate("/", { replace: true });
+    } catch {
+      navigate("/login", {
+        replace: true,
+        state: {
+          notice: "Account created! Please sign in.",
+          email: payload.email,
+        },
+      });
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] grid md:grid-cols-2">
-      <div className="hidden md:flex flex-col justify-between bg-brandDark text-paper p-12">
-        <span className="font-display text-2xl">Fern & Field</span>
-        <p className="font-display text-4xl leading-tight max-w-sm">
-          Join a community that shops with intention.
-        </p>
-        <span className="text-paper/60 text-sm">Create your account.</span>
-      </div>
+    <AuthShell
+      title="Create account"
+      subtitle="It only takes a minute."
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link to="/login" className="text-brandDark font-medium underline">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      {errors.form && <AuthAlert>{errors.form}</AuthAlert>}
 
-      <div className="flex items-center justify-center p-8">
-        {step === 1 ? (
-          <form onSubmit={handleSendOtp} className="w-full max-w-sm space-y-5">
-            <div>
-              <h1 className="font-display text-3xl text-brandDark">
-                Create account
-              </h1>
-              <p className="text-ink/60 text-sm mt-1">
-                It only takes a minute.
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <AuthField
+          label="Full name"
+          name="username"
+          icon={User}
+          autoComplete="name"
+          placeholder="Your name"
+          value={form.username}
+          onChange={setField("username")}
+          error={errors.username}
+        />
+
+        <AuthField
+          label="Email"
+          name="email"
+          type="email"
+          icon={Mail}
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={form.email}
+          onChange={setField("email")}
+          error={errors.email}
+        />
+
+        <div>
+          <AuthField
+            label="Password"
+            name="password"
+            icon={Lock}
+            autoComplete="new-password"
+            type={showPw ? "text" : "password"}
+            placeholder="At least 6 characters"
+            value={form.password}
+            onChange={setField("password")}
+            error={errors.password}
+            right={
+              <button
+                type="button"
+                onClick={() => setShowPw((s) => !s)}
+                aria-label={showPw ? "Hide password" : "Show password"}
+                className="text-ink/40 hover:text-ink"
+              >
+                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            }
+          />
+          {form.password && (
+            <div className="mt-2">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4].map((i) => (
+                  <span
+                    key={i}
+                    className={`h-1 flex-1 rounded-full transition-colors ${i <= level ? COLORS[level] : "bg-ink/10"}`}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-ink/50 mt-1">
+                Password strength: {LEVELS[level]}
               </p>
             </div>
+          )}
+        </div>
 
-            {error && (
-              <p className="text-sm bg-red-50 text-red-700 border border-red-200 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
-
-            <div>
-              <label className="text-sm text-ink/70">Username</label>
-              <input
-                type="text"
-                name="username"
-                required
-                value={form.username}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-ink/70">Email</label>
-              <input
-                type="email"
-                name="email"
-                required
-                value={form.email}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-ink/70">Password</label>
-              <input
-                type="password"
-                name="password"
-                required
-                value={form.password}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
-              />
-            </div>
-
-            <AnimatedButton
-              type="submit"
-              disabled={busy}
-              className="w-full bg-brandDark text-paper py-2.5 rounded-lg hover:bg-brand transition-colors disabled:opacity-60"
-            >
-              {busy ? "Sending OTP…" : "Send OTP"}
-            </AnimatedButton>
-
-            <p className="text-sm text-ink/60">
-              Already have an account?{" "}
-              <Link to="/login" className="text-brandDark underline">
-                Sign in
-              </Link>
-            </p>
-          </form>
-        ) : (
-          <form
-            onSubmit={handleVerifyAndRegister}
-            className="w-full max-w-sm space-y-5"
-          >
-            <div>
-              <h1 className="font-display text-3xl text-brandDark">
-                Verify your email
-              </h1>
-              <p className="text-ink/60 text-sm mt-1">
-                We sent a code to {form.email}
-              </p>
-            </div>
-
-            {error && (
-              <p className="text-sm bg-red-50 text-red-700 border border-red-200 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
-
-            <div>
-              <label className="text-sm text-ink/70">Enter OTP</label>
-              <input
-                type="text"
-                name="otp"
-                required
-                maxLength={6}
-                value={form.otp}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 tracking-widest text-center text-lg focus:outline-none focus:ring-2 focus:ring-brand"
-              />
-            </div>
-
-            <AnimatedButton
-              type="submit"
-              disabled={busy}
-              className="w-full bg-brandDark text-paper py-2.5 rounded-lg hover:bg-brand transition-colors disabled:opacity-60"
-            >
-              {busy ? "Verifying…" : "Verify & Create Account"}
-            </AnimatedButton>
-
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="text-sm text-ink/60 underline"
-            >
-              ← Change details
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full bg-brandDark text-paper py-3 rounded-lg text-sm font-medium hover:bg-brand transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {busy && <Loader2 size={16} className="animate-spin" />}
+          {busy ? "Creating account…" : "Create account"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

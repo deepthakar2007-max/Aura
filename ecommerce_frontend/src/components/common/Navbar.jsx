@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X, Search, Heart, ShoppingBag, User } from "lucide-react";
+import { Menu, X, Heart, ShoppingBag, User } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
+import SearchBox from "./SearchBox";
 
 export default function Navbar() {
   const { user, logout, token } = useAuth();
@@ -13,7 +14,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [search, setSearch] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef(null);
 
@@ -36,12 +36,6 @@ export default function Navbar() {
     logout();
     setOpen(false);
     navigate("/login");
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (search.trim()) navigate(`/shop?search=${encodeURIComponent(search)}`);
-    setMobileMenu(false);
   };
 
   if (!token) return null;
@@ -72,6 +66,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-5 sm:px-8 h-20 flex items-center gap-4 sm:gap-10">
         <button
           onClick={() => setMobileMenu((o) => !o)}
+          aria-label="Menu"
           className="md:hidden text-ink flex-shrink-0"
         >
           {mobileMenu ? <X size={22} /> : <Menu size={22} />}
@@ -112,32 +107,16 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <form
-          onSubmit={handleSearch}
-          className="hidden lg:flex flex-1 max-w-xs ml-auto"
-        >
-          <div className="relative w-full">
-            <input
-              type="text"
-              placeholder="Search luxury goods…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-cream/60 border border-ink/10 rounded-full pl-4 pr-9 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent transition-all"
-            />
-            <button
-              type="submit"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40"
-            >
-              <Search size={15} />
-            </button>
-          </div>
-        </form>
+        <div className="hidden lg:block flex-1 max-w-xs ml-auto">
+          <SearchBox />
+        </div>
 
         <div className="relative ml-auto md:ml-0 flex-shrink-0" ref={menuRef}>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setOpen((o) => !o)}
+            aria-label="Account menu"
             className="w-9 h-9 rounded-full overflow-hidden bg-ink text-paper flex items-center justify-center text-sm font-medium"
           >
             {user?.photo ? (
@@ -161,7 +140,7 @@ export default function Navbar() {
                 className="absolute right-0 mt-2 w-56 bg-white border border-ink/10 rounded-xl shadow-lg py-2 z-50"
               >
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-ink/10">
-                  <div className="w-9 h-9 rounded-full overflow-hidden bg-ink text-paper flex items-center justify-center text-xs font-medium flex-shrink-0">
+                  <div className="w-9 h-9 rounded-full overflow-hidden bg-ink text-paper flex items-center justify-center flex-shrink-0">
                     {user?.photo ? (
                       <img
                         src={user.photo}
@@ -217,23 +196,12 @@ export default function Navbar() {
             className="md:hidden overflow-hidden border-t border-ink/10 bg-paper"
           >
             <div className="px-5 py-4 space-y-1">
-              <form onSubmit={handleSearch} className="mb-3">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search luxury goods…"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full bg-cream/60 border border-ink/10 rounded-full pl-4 pr-9 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                  <button
-                    type="submit"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40"
-                  >
-                    <Search size={15} />
-                  </button>
-                </div>
-              </form>
+              <div className="mb-3">
+                <SearchBox
+                  suggestions={false}
+                  onNavigate={() => setMobileMenu(false)}
+                />
+              </div>
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
@@ -251,13 +219,6 @@ export default function Navbar() {
                   )}
                 </Link>
               ))}
-              <Link
-                to="/orders"
-                onClick={() => setMobileMenu(false)}
-                className="block py-2.5 text-sm text-ink/70"
-              >
-                My orders
-              </Link>
             </div>
           </motion.div>
         )}
