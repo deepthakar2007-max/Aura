@@ -10,9 +10,9 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { forgotPassword, resetPassword } from "../api/authApi";
-import AuthShell from "../components/auth/AuthShell";
-import AuthField from "../components/auth/AuthField";
-import AuthAlert from "../components/auth/AuthAlert";
+import AuthShell from "../auth/AuthShell";
+import AuthField from "../auth/AuthField";
+import AuthAlert from "../auth/AuthAlert";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
